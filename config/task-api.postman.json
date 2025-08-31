@@ -1,0 +1,831 @@
+{
+  "info": {
+    "name": "Task Management API",
+    "description": "Complete API collection for Task Management system with CRUD operations, filtering, sorting, and statistics",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has task data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('_id');",
+                  "    pm.expect(responseJson).to.have.property('title');",
+                  "    pm.expect(responseJson).to.have.property('category');",
+                  "    pm.expect(responseJson).to.have.property('priority');",
+                  "    pm.expect(responseJson).to.have.property('completed');",
+                  "    pm.expect(responseJson.completed).to.be.false;",
+                  "});",
+                  "",
+                  "// Save the task ID for other requests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('taskId', responseJson._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Complete project proposal\",\n  \"description\": \"Write a comprehensive project proposal for the new client including timeline, budget, and deliverables\",\n  \"category\": \"Work\",\n  \"priority\": \"High\",\n  \"deadline\": \"2024-12-31T23:59:59.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            },
+            "description": "Creates a new task with the provided details. This request will save the created task ID to use in other requests."
+          }
+        },
+        {
+          "name": "Create Personal Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Task category is Personal', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.category).to.eql('Personal');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Buy groceries\",\n  \"description\": \"Weekly grocery shopping - milk, bread, fruits, vegetables\",\n  \"category\": \"Shopping\",\n  \"priority\": \"Medium\",\n  \"deadline\": \"2025-09-05T18:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            },
+            "description": "Example of creating a personal/shopping task with medium priority."
+          }
+        },
+        {
+          "name": "Get All Tasks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Each task has required properties', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.length > 0) {",
+                  "        const task = responseJson[0];",
+                  "        pm.expect(task).to.have.property('_id');",
+                  "        pm.expect(task).to.have.property('title');",
+                  "        pm.expect(task).to.have.property('category');",
+                  "        pm.expect(task).to.have.property('priority');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            },
+            "description": "Retrieves all tasks without any filters or sorting."
+          }
+        },
+        {
+          "name": "Get Tasks - Filtered by Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('All tasks have Work category', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    responseJson.forEach(task => {",
+                  "        pm.expect(task.category).to.eql('Work');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?category=Work&sortBy=priority&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Work"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "priority"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Get all work tasks sorted by priority (High to Low)."
+          }
+        },
+        {
+          "name": "Get Tasks - High Priority Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?priority=High&completed=false&sortBy=deadline&sortOrder=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "priority",
+                  "value": "High"
+                },
+                {
+                  "key": "completed",
+                  "value": "false"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "deadline"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Get all high priority incomplete tasks sorted by deadline (earliest first)."
+          }
+        },
+        {
+          "name": "Get Tasks - Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?deadlineFrom=2025-09-01&deadlineTo=2025-12-31&sortBy=deadline",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "deadlineFrom",
+                  "value": "2025-09-01"
+                },
+                {
+                  "key": "deadlineTo",
+                  "value": "2025-12-31"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "deadline"
+                }
+              ]
+            },
+            "description": "Get all tasks with deadlines between September 1st and December 31st, 2024."
+          }
+        },
+        {
+          "name": "Get Task by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has task data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('_id');",
+                  "    pm.expect(responseJson).to.have.property('title');",
+                  "    pm.expect(responseJson).to.have.property('category');",
+                  "    pm.expect(responseJson).to.have.property('priority');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Retrieves a specific task by its ID. Uses the taskId variable set from the Create Task request."
+          }
+        },
+        {
+          "name": "Get Task by ID - Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error message for invalid ID', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.error).to.eql('Invalid ID format');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/invalid-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "invalid-id"]
+            },
+            "description": "Test case for invalid MongoDB ObjectId format."
+          }
+        },
+        {
+          "name": "Update Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Task is updated', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('_id');",
+                  "    pm.expect(responseJson.priority).to.eql('Medium');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated project proposal\",\n  \"description\": \"Updated description with new client requirements and revised timeline\",\n  \"priority\": \"Medium\",\n  \"completed\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Updates an existing task. Uses the taskId variable from the Create Task request."
+          }
+        },
+        {
+          "name": "Mark Task as Completed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Task is marked as completed', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.completed).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Example of updating only the completion status of a task."
+          }
+        },
+        {
+          "name": "Get Task Statistics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has statistics data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('total');",
+                  "    pm.expect(responseJson).to.have.property('completed');",
+                  "    pm.expect(responseJson).to.have.property('pending');",
+                  "    pm.expect(responseJson).to.have.property('overdue');",
+                  "    pm.expect(responseJson).to.have.property('byCategory');",
+                  "    pm.expect(responseJson).to.have.property('byPriority');",
+                  "});",
+                  "",
+                  "pm.test('Statistics are valid numbers', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.total).to.be.a('number');",
+                  "    pm.expect(responseJson.completed).to.be.a('number');",
+                  "    pm.expect(responseJson.pending).to.be.a('number');",
+                  "    pm.expect(responseJson.total).to.eql(responseJson.completed + responseJson.pending);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "stats"]
+            },
+            "description": "Retrieves comprehensive statistics about all tasks including counts by category, priority, and completion status."
+          }
+        },
+        {
+          "name": "Delete Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response confirms deletion', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.eql('Task deleted successfully');",
+                  "    pm.expect(responseJson).to.have.property('deletedTask');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Deletes a task by its ID. Uses the taskId variable from the Create Task request."
+          }
+        }
+      ],
+      "description": "CRUD operations for task management"
+    },
+    {
+      "name": "Filtering & Sorting Examples",
+      "item": [
+        {
+          "name": "Get Completed Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?completed=true&sortBy=updatedAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "completed",
+                  "value": "true"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "updatedAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Get all completed tasks sorted by last update time."
+          }
+        },
+        {
+          "name": "Get Pending High Priority Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?priority=High&completed=false&sortBy=deadline&sortOrder=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "priority",
+                  "value": "High"
+                },
+                {
+                  "key": "completed",
+                  "value": "false"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "deadline"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Get high priority incomplete tasks sorted by deadline (most urgent first)."
+          }
+        },
+        {
+          "name": "Get Tasks Due This Week",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?deadlineFrom=2025-08-31&deadlineTo=2025-09-07&sortBy=priority",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "deadlineFrom",
+                  "value": "2025-08-31"
+                },
+                {
+                  "key": "deadlineTo",
+                  "value": "2025-09-07"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "priority"
+                }
+              ]
+            },
+            "description": "Get all tasks due within a specific date range."
+          }
+        },
+        {
+          "name": "Get Personal Tasks by Title",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?category=Personal&sortBy=title&sortOrder=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Personal"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "title"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Get personal tasks sorted alphabetically by title."
+          }
+        }
+      ],
+      "description": "Examples of filtering and sorting tasks with different parameters"
+    },
+    {
+      "name": "Error Handling Examples",
+      "item": [
+        {
+          "name": "Create Task - Validation Error",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response has validation error', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Task without required fields\",\n  \"category\": \"InvalidCategory\",\n  \"priority\": \"VeryHigh\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            },
+            "description": "Example request with missing required fields and invalid enum values to test validation."
+          }
+        },
+        {
+          "name": "Get Task - Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error message for not found', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.error).to.eql('Task not found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/60d0fe4f5311236168a109cc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "60d0fe4f5311236168a109cc"]
+            },
+            "description": "Test case for requesting a task that doesn't exist (valid ID format but non-existent)."
+          }
+        },
+        {
+          "name": "Update Task - Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error message for invalid ID format', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.error).to.eql('Invalid ID format');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"This update should fail\",\n  \"completed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/123",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "123"]
+            },
+            "description": "Test case for updating a task with invalid ID format."
+          }
+        }
+      ],
+      "description": "Examples of error scenarios and validation failures"
+    },
+    {
+      "name": "Sample Data Setup",
+      "item": [
+        {
+          "name": "Create Work Task - High Priority",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Prepare quarterly report\",\n  \"description\": \"Compile and analyze Q3 performance metrics\",\n  \"category\": \"Work\",\n  \"priority\": \"High\",\n  \"deadline\": \"2024-09-15T17:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            }
+          }
+        },
+        {
+          "name": "Create Personal Task - Medium Priority",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Schedule dentist appointment\",\n  \"description\": \"Annual dental checkup and cleaning\",\n  \"category\": \"Health\",\n  \"priority\": \"Medium\",\n  \"deadline\": \"2024-09-30T14:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            }
+          }
+        },
+        {
+          "name": "Create Shopping Task - Low Priority",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Buy new laptop case\",\n  \"description\": \"Find a durable laptop case for 15-inch MacBook\",\n  \"category\": \"Shopping\",\n  \"priority\": \"Low\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            }
+          }
+        },
+        {
+          "name": "Create Education Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Complete Node.js course\",\n  \"description\": \"Finish the advanced Node.js course on Udemy\",\n  \"category\": \"Education\",\n  \"priority\": \"Medium\",\n  \"deadline\": \"2024-10-15T23:59:59.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            }
+          }
+        }
+      ],
+      "description": "Pre-built requests to quickly create sample data for testing"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set current timestamp for requests that need it",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test to check response time",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "// Global test to check content type for successful responses",
+          "if (pm.response.code < 400) {",
+          "    pm.test('Response has JSON content type', function () {",
+          "        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}
